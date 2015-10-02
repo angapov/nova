@@ -277,6 +277,30 @@ class RBDDriver(object):
         args += self.ceph_args()
         utils.execute('rbd', 'import', *args)
 
+    def export_image(self, image_url, dst_path):
+        """Export RBD volume to dst_path file.
+
+        Uses 'rbd export' command line tool.
+
+        :image_url: Image URL as an urlparse ParseResult
+        :dst_path:  Full path to local file
+        """
+        pool, image, snapshot = image_url.path[1:].split('/')
+        if self.exists(image, pool=pool, snapshot=snapshot):
+            args = self.ceph_args()
+            args += ['--pool', pool, '--snap', snapshot, image, dst_path]
+            LOG.info(_LI('Directly downloading image '
+                         '%s@%s using rbd export'), % (image, snapshot))
+            try:
+                utils.execute('rbd', 'export', *args)
+            except Exception as ex:
+                LOG.error(_LE('RBD image export failed: %s'), % ex)
+                raise
+
+        else:
+            LOG.warn(_LW("RBD image %s@%s not found"), % (image, snapshot))
+            raise rbd.ImageNotFound
+
     def cleanup_volumes(self, instance):
         def _cleanup_vol(ioctx, volume, retryctx):
             try:
