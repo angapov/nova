@@ -19,6 +19,7 @@ from nova.virt.libvirt import imagebackend
 
 class RBDTransfer(xfer_base.TransferBase):
 
+
     def download(self, context, url_parts, dst_file, metadata, **kwargs):
         Rbd = imagebackend.Rbd(path=url_parts.path)
         Rbd.export_image(url_parts, dst_file)
